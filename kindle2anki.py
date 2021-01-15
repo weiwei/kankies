@@ -3,7 +3,9 @@ from logging import debug
 import sys
 import sqlite3
 import argparse
+import spacy
 
+nlp = spacy.load("es_core_news_sm")
 
 from peewee import *
 import datetime
@@ -44,7 +46,7 @@ class Word(BaseModel):
     class Meta:
         table_name = "WORDS"
     id = TextField(unique=True)
-    word = TextField()
+    word = TextField(column_name="word")
     stem = TextField()
     lang = TextField()
     category = IntegerField(default=0)
@@ -65,6 +67,15 @@ class Lookup(BaseModel):
 
 db.connect()
 
-words = (Lookup.select(Lookup))
-for w in words:
-    print(w)
+lookup = (Lookup
+    .select(Lookup.usage, Word.stem, Word.word)
+    .join(Word, JOIN.LEFT_OUTER, on=(Word.id == Lookup.word_key))
+    .where(Word.lang == "es")
+    .group_by(Word.stem)
+)
+for l in lookup:
+    doc = nlp(l.usage)
+    for word in doc:
+        if word.text.lower() == l.word.word.lower():
+            print(word.text, l.word.stem, word.lemma_, word.pos_)
+

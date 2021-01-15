@@ -2,3 +2,5 @@ bs4
 pyrae
 spacy
 peewee
+jupyterlab
+jedi==0.17.2
