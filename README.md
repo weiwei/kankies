@@ -19,3 +19,7 @@ For each pair of word and example from `vocab.db`:
 2. [OL][https://languages.oup.com/google-dictionary-es/]
 3. [DLE][https://dle.rae.es/]
 4. ???
+
+## Notes
+
+The plan was to use spacy for step 2 and 3, but apparently spacy isn't accurate enough. Use Kindle word stem instead.
