@@ -1,13 +1,7 @@
-from enum import unique
-from logging import debug
-import sys
-import sqlite3
-import argparse
 import time
 from raebot import search_words
 import genanki
 from peewee import *
-import datetime
 
 import logging
 logger = logging.getLogger('peewee')
@@ -74,9 +68,37 @@ lookup = (Lookup
     .group_by(Word.stem)
 )
 
+css ="""
+.word {
+    font-weight: bold;
+    text-align: center;
+    font-family: sans-serif;
+    font-size: 15pt
+}
+.usage {
+    font-family: sans-serif;
+    font-size: 13pt;
+}
+.word-type {
+    font-family: system-ui;
+    font-size: 12pt;
+}
+.definition {
+    font-family: system-ui;
+    font-size: 14pt;
+}
+.examples {
+    font-family: sans-serif;
+    font-size: 13pt;
+}
+.synonyms {
+    font-family: sans-serif;
+    font-size: 13pt;
+}
+"""
 
 my_model = genanki.Model(
-  1607392321,
+  1607392322,
   'Simple Model',
   fields=[
     {'name': 'Word'},
@@ -86,20 +108,24 @@ my_model = genanki.Model(
   templates=[
     {
       'name': 'Card 1',
-      'qfmt': '<center>{{Word}}<center><br>{{Example}}',
+      'qfmt': '<div class="word">{{Word}}</div><p class="usage">{{Example}}</p>',
       'afmt': '{{FrontSide}}<hr id="answer">{{Definition}}',
     },
-  ])
+  ],
+  css=css
+  )
 
 my_deck = genanki.Deck(
-  2059400220,
-  'Kindle Vocabularies')
+  2059400222,
+  'Vocabularios Kindle')
 
 unknown = []
 exceptions = []
 
 for l in lookup:
     print(l.word.stem)
+    # if l.word.stem.startswith("P"):
+    #     break
     try:
         res = search_words(l.word.stem)
     except:
@@ -111,22 +137,31 @@ for l in lookup:
     defis = res[0].definitions[:3]
     dd =  ""
     for defi in defis:
-        dd += "<p>("
+        dd += '<div>(<span class="word-type">'
         dd += " ".join(defi.types)
-        dd += ") "
+        dd += '</span>) <span class="definition">'
         dd += defi.definition
+        dd += "</span>"
         if defi.examples:
-            dd += "<i>"
+            dd += '<span class="examples"> 📜 '
             dd += " "
             dd += " ".join(defi.examples)
-            dd += "</i>"
-        dd += "</p>"
+            dd += "</span>"
+        if hasattr(defi, "synonyms") and defi.synonyms:
+            dd += '<br><span class="synonyms"> SIN.: '
+            dd += " ".join(defi.synonyms)
+            dd += "</span>"
+        if hasattr(defi, "antonyms") and defi.antonyms:
+            dd += '<br><span class="synonyms">ANT.: '
+            dd += " ".join(defi.antonyms)
+            dd += "</span>"
+        dd += "</div><br>"
     my_note = genanki.Note(
         model=my_model,
-        fields=[l.word.stem, l.usage, dd]
+        fields=[res[0].text, l.usage, dd]
     )
     my_deck.add_note(my_note)
-    time.sleep(2)
+    time.sleep(1)
 
 genanki.Package(my_deck).write_to_file('output.apkg')
 open("unknown.txt", "w").write("\n".join(unknown))
