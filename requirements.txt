@@ -1,6 +1,3 @@
-bs4
-pyrae
-spacy
+raebot==0.1.9
 peewee
-jupyterlab
-jedi==0.17.2
+genanki
