@@ -1,7 +1,8 @@
 import time
-from raebot import search_words
+from raebot import by_words
 import genanki
 from peewee import *
+from random import shuffle
 
 import logging
 logger = logging.getLogger('peewee')
@@ -121,13 +122,14 @@ my_deck = genanki.Deck(
 
 unknown = []
 exceptions = []
+notes = []
 
 for l in lookup:
     print(l.word.stem)
     # if l.word.stem.startswith("P"):
     #     break
     try:
-        res = search_words(l.word.stem)
+        res = by_words(l.word.stem)
     except:
         exceptions.append(l.word.stem)
         continue
@@ -149,19 +151,25 @@ for l in lookup:
             dd += "</span>"
         if hasattr(defi, "synonyms") and defi.synonyms:
             dd += '<br><span class="synonyms"> SIN.: '
-            dd += " ".join(defi.synonyms)
+            dd += ", ".join(defi.synonyms)
             dd += "</span>"
         if hasattr(defi, "antonyms") and defi.antonyms:
             dd += '<br><span class="synonyms">ANT.: '
-            dd += " ".join(defi.antonyms)
+            dd += ", ".join(defi.antonyms)
             dd += "</span>"
         dd += "</div><br>"
     my_note = genanki.Note(
         model=my_model,
         fields=[res[0].text, l.usage, dd]
     )
-    my_deck.add_note(my_note)
+    notes.append(my_note)
     time.sleep(1)
+
+shuffle(notes)
+
+for note in notes:
+    my_deck.add_note(my_note)
+
 
 genanki.Package(my_deck).write_to_file('output.apkg')
 open("unknown.txt", "w").write("\n".join(unknown))
